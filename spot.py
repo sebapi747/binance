@@ -46,15 +46,30 @@ def get_prices():
     diclist = resp.json()
     for i in diclist:
         symbol, price = i['symbol'], float(i['price'])
+        if 'BUSD' not in symbol:
+            continue
         g.db.execute('insert into quotes (dt, symbol, price) values (?, ?, ?)', [ymdstr, symbol, price])
     g.db.commit()
 
-''' ---------------------------------------------------------------------------------------------
- read data (requires pandas)
-'''
-def read_data():
-    df = pd.read_sql_query("select * from quotes", g.db)
-    print(df)
+def get_futprices():
+    url = "https://testnet.binancefuture.com/dapi/v1/ticker/price"
+    headers = {'Content-Type': 'application/json'}
+    resp = requests.get(url,headers=headers)
+    print(resp.status_code)
+    diclist = resp.json()
+    for i in diclist:
+        try:
+            g.db.execute('insert into futures (time, symbol, price, ps) values (?, ?, ?, ?)', [i['time'], i['symbol'], i['price'], i['ps']])
+        except:
+            pass
+    g.db.commit()
+
+def cleanup():
+    g.db.execute('delete from quotes where symbol not like "%BUSD"')
+    g.db.commit()
+    g.db.execute('vacuum')
 
 #init_sql_schema()
 get_prices()
+get_futprices()
+cleanup()
