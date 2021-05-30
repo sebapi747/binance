@@ -72,4 +72,4 @@ def cleanup():
 #init_sql_schema()
 get_prices()
 get_futprices()
-cleanup()
+#cleanup()
