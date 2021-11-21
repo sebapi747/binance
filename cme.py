@@ -67,6 +67,7 @@ def get_fut():
             g.db.execute('insert into cmefut (code, expirationMonth, last, volume, updated, expiry) values (?, ?, ?, ?, ?, ?)', [i['code'], i['expirationMonth'], i['last'], i['volume'], i['updated'], i['expiry'] ])
         except:
             print("exception")
+            print(dic)
             pass
     g.db.commit()
 

@@ -1,4 +1,5 @@
 # curl -g 'https://api.binance.com/api/v3/ticker/price'
+import csv, os
 import requests
 import datetime as dt
 import sqlite3
@@ -46,9 +47,17 @@ def get_prices():
     diclist = resp.json()
     for i in diclist:
         symbol, price = i['symbol'], float(i['price'])
-        if 'BUSD' not in symbol:
+        if 'BUSD'!=symbol[-4:]:
             continue
         g.db.execute('insert into quotes (dt, symbol, price) values (?, ?, ?)', [ymdstr, symbol, price])
+        dic = {'dt': ymdstr, 'price':price}
+        filename = dirname + "/spot/" + symbol + ".csv"
+        fileexists = os.path.isfile(filename)
+        with open(filename, 'a') as f:
+            w = csv.writer(f)
+            if fileexists == False:
+                w.writerow(dic.keys())
+            w.writerow(dic.values())
     g.db.commit()
 
 def get_futprices():
@@ -60,6 +69,13 @@ def get_futprices():
     for i in diclist:
         try:
             g.db.execute('insert into futures (time, symbol, price, ps) values (?, ?, ?, ?)', [i['time'], i['symbol'], i['price'], i['ps']])
+            filename = dirname + "/fut/" + i['symbol'] + ".csv"
+            fileexists = os.path.isfile(filename)
+            with open(filename, 'a') as f:
+                w = csv.writer(f)
+                if fileexists == False:
+                    w.writerow(i.keys())
+                w.writerow(i.values())
         except:
             pass
     g.db.commit()
