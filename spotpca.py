@@ -25,7 +25,7 @@ def logPrice():
 
 def pca_usd():
     print("pca usd")
-    tickers = pd.read_csv("topcap.csv")["ticker"]
+    tickers = pd.read_csv(dirname+"/topcap.csv")["ticker"]
     si = "BTC"
     si += "BUSD"
     filename = dirname + "/spot/" + si + ".csv"
