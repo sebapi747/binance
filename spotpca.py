@@ -18,6 +18,7 @@ def logPrice():
         df['dt'] = pd.to_datetime(df['dt'])
         # df           = df.set_index('dt')
         plt.plot(df['dt'].to_numpy(),np.log(df['price']/df.iloc[-1]['price']), label=si[:-4])
+    plt.gcf().autofmt_xdate()
     plt.title("log Price rebased\n%s" % str(df['dt'].iloc[-1])[:16])
     plt.legend()
     plt.savefig(outdir + "ARWEAVE-rt.png")
@@ -67,6 +68,7 @@ def pca_usd():
             r = ret.iloc[i]
             si = r['symbol']
             plt.plot(pd.to_datetime(dfbtc.index).to_numpy(),np.log(dfbtc[si]/dfbtc.iloc[-1][si]), label=si[:-4])
+        plt.gcf().autofmt_xdate()
         plt.legend()
         plt.title("log price\n%s" % dfbtc.index[-1][:16])
         plt.savefig(outdir + "cryptoaltlogprice%0d.png" % j)
