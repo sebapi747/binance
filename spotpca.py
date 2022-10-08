@@ -27,10 +27,11 @@ def logPrice():
 def pca_usd():
     print("pca usd")
     tickers = pd.read_csv(dirname+"/topcap.csv")["ticker"]
+    roffset = 60*24*90 + 2
     si = "BTC"
     si += "BUSD"
     filename = dirname + "/spot/" + si + ".csv"
-    dfbtc = pd.read_csv(filename)[['dt','price']]
+    dfbtc = pd.read_csv(filename).tail(roffset)[['dt','price']]
     dfbtc.rename(columns={'price': si}, inplace=True)
     dfbtc   = dfbtc.set_index('dt')
     for si in tickers:
@@ -39,7 +40,7 @@ def pca_usd():
         si += "BUSD"
         if 1:
             filename = dirname + "/spot/" + si + ".csv"
-            df = pd.read_csv(filename)[['dt','price']]
+            df = pd.read_csv(filename).tail(roffset)[['dt','price']]
             df.rename(columns={'price': si}, inplace=True)
             df   = df.set_index('dt')
             dfbtc = dfbtc.merge(df, on="dt")
@@ -74,7 +75,8 @@ def pca_usd():
         plt.savefig(outdir + "cryptoaltlogprice%0d.png" % j)
         plt.close()
 
-    cov = diff.dropna().corr()#*60*24*365
+    nonzero = diff.columns[np.sum(np.abs(diff[1:]))>0]
+    cov = diff[nonzero].dropna().corr()#*60*24*365
     w,v = np.linalg.eigh(cov)
 
     plt.bar(np.arange(len(w)),sorted(np.sqrt(w), reverse=True))
@@ -89,13 +91,14 @@ def pca_usd():
     print("pca vector")
     plt.close()
 
-    weights = v.T[-1]/list(sd.values())
+    nsd = [sd[p] for p in nonzero]
+    weights = v.T[-1]/nsd
     weights /= np.sum(weights)
     weights = (np.abs(weights)>=sorted(np.abs(weights))[-20])*weights
     weights /= np.sum(weights)
     weights1 = weights
 
-    weights = v.T[-2]/list(sd.values())
+    weights = v.T[-2]/nsd
     weights = ((weights)>=sorted((weights))[-20])*weights
     weights /= np.sum(weights)
 
@@ -106,7 +109,7 @@ def pca_usd():
     plt.savefig(outdir + "pcaweights.png")
     print("pca weights")
     plt.close()
-    data = pd.DataFrame({'name':diff.columns,'pca1weight':weights1,'pca2weight':weights, "sd":list(sd.values()) })
+    data = pd.DataFrame({'name':nonzero,'pca1weight':weights1,'pca2weight':weights, "sd":nsd })
     data.to_html(outdir + "pcaweights-usd-rt.html")
     return diff, data, sd 
 
@@ -116,7 +119,8 @@ def pca_btc(diff,sd):
     a = pd.DataFrame(diff[diff.columns[1:]])
     for c in a.columns:
         a[c] = diff[c] - diff['BTCBUSD']
-    cov = a[a.columns].dropna().corr()#*60*24*365
+    nonzero = a.columns[np.sum(np.abs(a[1:]))>0]
+    cov = a[nonzero].dropna().corr()#*60*24*365
     w,v = np.linalg.eigh(cov)
 
     sd_btc = {}
