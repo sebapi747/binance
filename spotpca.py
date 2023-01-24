@@ -85,6 +85,7 @@ def pca_usd():
     plt.close()
     for i in range(1,3):
         plt.bar(np.arange(len(w)), v.T[-i]*np.sqrt(w[-i]), label="pca %d" %(i))
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
     plt.title("Correlation PCA on Top Mkt Cap Crypto\n%s" % dfbtc.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcavector-rt.png")
@@ -104,7 +105,8 @@ def pca_usd():
 
     plt.bar(np.arange(len(w)),weights1, label="pca1")
     plt.bar(np.arange(len(w)),weights, label="pca2")
-    plt.title(" Portfolio PCA Top Contributors")
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.title(" Portfolio PCA Top Contributors\n%s" % dfbtc.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcaweights.png")
     print("pca weights")
@@ -127,15 +129,16 @@ def pca_btc(diff,sd):
     for c in diff.columns[1:]:
         sd_btc[c] = np.std(a[c])*np.sqrt(60*24*365)
         
-    plt.bar(np.arange(len(w)),sorted(np.sqrt(w), reverse=True))
-    plt.title("PCA Eigenvalue Sqrt Size (BTC)")
+    plt.bar(np.arange(len(w)),sorted(np.sqrt(np.clip(w,0,1e300)), reverse=True))
+    plt.title("PCA Eigenvalue Sqrt Size (BTC)\n%s" % diff.index[-1][:16])
     plt.savefig(outdir + "pcaeigenvalue-btc-rt.png")
     plt.close()
     for i in range(1,3):
         plt.bar(np.arange(len(w)), v.T[-i]*np.sqrt(w[-i]), label="pca %d" %(i))
-    plt.title("Correlation PCA on Top Mkt Cap Crypto (BTC)")
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.title("Correlation PCA on Top Mkt Cap Crypto (BTC)\n%s" % diff.index[-1][:16])
     plt.legend()
-    plt.savefig("pcavector-btc-rt.png")
+    plt.savefig(outdir + "pcavector-btc-rt.png")
     plt.close()
     print("pca vector")
 
@@ -151,9 +154,10 @@ def pca_btc(diff,sd):
 
     plt.bar(np.arange(len(w)),weights1, label="pca1")
     plt.bar(np.arange(len(w)),weights, label="pca2")
-    plt.title(" Portfolio PCA Top Contributors (BTC)")
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.title(" Portfolio PCA Top Contributors (BTC)\n%s" % diff.index[-1][:16])
     plt.legend()
-    plt.savefig("pcaweights-btc-rt.png")
+    plt.savefig(outdir + "pcaweights-btc-rt.png")
     print("pca weights")
     plt.close()
     data = pd.DataFrame({'name':a.columns,'pca1weight':weights1,'pca2weight':weights, "sd":list(sd.values())[1:], "sd_btc":list(sd_btc.values()) })
