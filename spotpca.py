@@ -4,11 +4,18 @@ import sqlite3
 import config
 import pandas as pd
 import numpy as np
+import requests
 import matplotlib.pyplot as plt
 dirname = config.dirname
 remotedir = config.remotedir
 outdir = dirname + '/pics/'
 
+def sendTelegram(text):
+    prefix = os.uname()[1] + __file__ + ":"
+    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
+    resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
+    resp.raise_for_status()
+    
 def logPrice():
     print("logprice")
     for si in ['BTC', 'ETH', 'AR']:
@@ -34,6 +41,11 @@ def pca_usd():
     dfbtc = pd.read_csv(filename).tail(roffset)[['dt','price']]
     dfbtc.rename(columns={'price': si}, inplace=True)
     dfbtc   = dfbtc.set_index('dt')
+    if np.std(dfbtc.tail(2)[si])==0:
+        msg = "std for %s" % si
+        print(msg)
+        sendTelegram(msg)
+        exit()
     for si in tickers:
         if si=="BTC":
             continue
