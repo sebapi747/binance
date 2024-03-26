@@ -52,10 +52,11 @@ def get_fut():
         "Cache-Control": "max-age=0",
         "Upgrade-Insecure-Requests": "1"
     }
-    x = requests.get('https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G', headers = headers)
+    url = 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G'
+    x = requests.get(url, headers = headers)
     print(x.status_code)
     if x.status_code!=200:
-        sendTelegram("error with cmegroup query")
+        sendTelegram("error %s %d" % (url,x.status_code))
     cols = ['code', 'expirationMonth','last']
     for r in x.json()['quotes']:
         dic = {}
