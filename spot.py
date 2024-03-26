@@ -47,7 +47,7 @@ def get_prices():
     diclist = resp.json()
     for i in diclist:
         symbol, price = i['symbol'], float(i['price'])
-        if 'BUSD'!=symbol[-4:]:
+        if 'USDT'!=symbol[-4:]: # on Dec 15th 2023 04:55, BUSD stopped being quoted
             continue
         g.db.execute('insert into quotes (dt, symbol, price) values (?, ?, ?)', [ymdstr, symbol, price])
         dic = {'dt': ymdstr, 'price':price}
