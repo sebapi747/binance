@@ -8,6 +8,11 @@ import config
 dirname = config.dirname
 DATABASE= "cme.db"
 
+def sendTelegram(text):
+    prefix = os.uname()[1] + __file__ + ":"
+    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
+    resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
+    resp.raise_for_status()
 ''' ---------------------------------------------------------------------------------------------
  SQLite utils
 '''
@@ -49,6 +54,8 @@ def get_fut():
     }
     x = requests.get('https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G', headers = headers)
     print(x.status_code)
+    if x.status_code!=200:
+        sendTelegram("error with cmegroup query")
     cols = ['code', 'expirationMonth','last']
     for r in x.json()['quotes']:
         dic = {}
