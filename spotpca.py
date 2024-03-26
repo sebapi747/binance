@@ -12,7 +12,7 @@ outdir = dirname + '/pics/'
 def logPrice():
     print("logprice")
     for si in ['BTC', 'ETH', 'AR']:
-        si += "BUSD"
+        si += "USDT"
         filename = dirname + "/spot/" + si + ".csv"
         df = pd.read_csv(filename)[['dt','price']]
         df['dt'] = pd.to_datetime(df['dt'])
@@ -29,7 +29,7 @@ def pca_usd():
     tickers = pd.read_csv(dirname+"/topcap.csv")["ticker"]
     roffset = 60*24*90 + 2
     si = "BTC"
-    si += "BUSD"
+    si += "USDT"
     filename = dirname + "/spot/" + si + ".csv"
     dfbtc = pd.read_csv(filename).tail(roffset)[['dt','price']]
     dfbtc.rename(columns={'price': si}, inplace=True)
@@ -37,7 +37,7 @@ def pca_usd():
     for si in tickers:
         if si=="BTC":
             continue
-        si += "BUSD"
+        si += "USDT"
         if 1:
             filename = dirname + "/spot/" + si + ".csv"
             df = pd.read_csv(filename).tail(roffset)[['dt','price']]
@@ -49,7 +49,7 @@ def pca_usd():
     means = {}
     offset = 60*24*90
     for si in tickers:
-        si += "BUSD"
+        si += "USDT"
         means[si] = np.mean(diff[si][-offset:])*60*24*365
         sd[si] = np.std(diff[si][-offset:])*np.sqrt(60*24*365)
     ret = pd.DataFrame(data={'symbol':list(sd.keys()), 'means':list(means.values()), 'sd':list(sd.values())})
@@ -60,9 +60,9 @@ def pca_usd():
 
     for j in range(14):
         print("close log price %d" %j)
-        si = "BTCBUSD"
+        si = "BTCUSDT"
         plt.plot(pd.to_datetime(dfbtc.index).to_numpy(),np.log(dfbtc[si]/dfbtc.iloc[-1][si]), label=si[:-4])
-        si = "ETHBUSD"
+        si = "ETHUSDT"
         plt.plot(pd.to_datetime(dfbtc.index).to_numpy(),np.log(dfbtc[si]/dfbtc.iloc[-1][si]), label=si[:-4])
         n = j*4
         for i in range(n, n+4):
@@ -86,6 +86,7 @@ def pca_usd():
     for i in range(1,3):
         plt.bar(np.arange(len(w)), v.T[-i]*np.sqrt(w[-i]), label="pca %d" %(i))
     plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title("Correlation PCA on Top Mkt Cap Crypto\n%s" % dfbtc.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcavector-rt.png")
@@ -106,6 +107,7 @@ def pca_usd():
     plt.bar(np.arange(len(w)),weights1, label="pca1")
     plt.bar(np.arange(len(w)),weights, label="pca2")
     plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title(" Portfolio PCA Top Contributors\n%s" % dfbtc.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcaweights.png")
@@ -120,7 +122,7 @@ def pca_btc(diff,sd):
     print("pca btc")
     a = pd.DataFrame(diff[diff.columns[1:]])
     for c in a.columns:
-        a[c] = diff[c] - diff['BTCBUSD']
+        a[c] = diff[c] - diff['BTCUSDT']
     nonzero = a.columns[np.sum(np.abs(a[1:]))>0]
     cov = a[nonzero].dropna().corr()#*60*24*365
     w,v = np.linalg.eigh(cov)
@@ -136,6 +138,7 @@ def pca_btc(diff,sd):
     for i in range(1,3):
         plt.bar(np.arange(len(w)), v.T[-i]*np.sqrt(w[-i]), label="pca %d" %(i))
     plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title("Correlation PCA on Top Mkt Cap Crypto (BTC)\n%s" % diff.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcavector-btc-rt.png")
@@ -155,6 +158,7 @@ def pca_btc(diff,sd):
     plt.bar(np.arange(len(w)),weights1, label="pca1")
     plt.bar(np.arange(len(w)),weights, label="pca2")
     plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title(" Portfolio PCA Top Contributors (BTC)\n%s" % diff.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcaweights-btc-rt.png")
