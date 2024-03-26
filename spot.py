@@ -8,6 +8,11 @@ import config
 dirname = config.dirname
 DATABASE= "quotes.db"
 
+def sendTelegram(text):
+    prefix = os.uname()[1] + __file__ + ":"
+    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
+    resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
+    resp.raise_for_status()
 ''' ---------------------------------------------------------------------------------------------
  SQLite utils
 '''
@@ -43,6 +48,8 @@ def get_prices():
     headers = {'Content-Type': 'application/json'}
     resp = requests.get(url,headers=headers)
     print(resp.status_code)
+    if resp.status_code!=200
+        sendTelegram("error with %s %d" % (url,resp.status_code))
     ymdstr = dt.datetime.utcnow()
     diclist = resp.json()
     for i in diclist:
