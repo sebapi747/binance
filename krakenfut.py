@@ -8,6 +8,7 @@ filedir = os.path.dirname(__file__)
 os.chdir("./" if filedir=="" else filedir)
 import config
 
+# see https://github.com/CryptoFacilities/REST-v3-Python/tree/master
 outputdir = "krakenpics/" 
 baseurl = "https://futures.kraken.com"
 
