@@ -48,7 +48,7 @@ def get_prices():
     headers = {'Content-Type': 'application/json'}
     resp = requests.get(url,headers=headers)
     print(resp.status_code)
-    if resp.status_code!=200
+    if resp.status_code!=200:
         sendTelegram("error with %s %d" % (url,resp.status_code))
     ymdstr = dt.datetime.utcnow()
     diclist = resp.json()
