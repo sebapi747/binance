@@ -3,6 +3,8 @@ import csv, os
 import requests
 import datetime as dt
 import sqlite3
+filedir = os.path.dirname(__file__)
+os.chdir("./" if filedir=="" else filedir)
 import config
 
 dirname = config.dirname
