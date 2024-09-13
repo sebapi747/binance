@@ -91,8 +91,8 @@ def plot_all_order_books(fut_by_ccy,ob_by_symbol):
         colors = ["blue","orange","green","red","cyan"]
         obdates = []
         if len(fut_by_ccy[ccy])>len(colors):
-        	sendTelegram("too many fut:"+str(fut_by_ccy[ccy]))
-        	return
+            sendTelegram("too many fut:"+str(fut_by_ccy[ccy]))
+            return
         for i,symbol in enumerate(fut_by_ccy[ccy]):
             obdate,ob = ob_by_symbol[symbol]
             if len(ob['bids'])==0:
@@ -119,8 +119,11 @@ def plot_all_order_books(fut_by_ccy,ob_by_symbol):
         plt.close()
 
 if __name__ == "__main__":
-    symbols = get_fixed_fut_symbols()
-    fut_by_ccy = get_fut_by_ccy(symbols)
-    ob_by_symbol = get_orderbooks(fut_by_ccy)
-    plot_all_order_books(fut_by_ccy,ob_by_symbol)
-    os.system("rsync -avuzhe ssh %s %s" % (outputdir,config.remotedir+'/'+outputdir))
+    try:
+        symbols = get_fixed_fut_symbols()
+        fut_by_ccy = get_fut_by_ccy(symbols)
+        ob_by_symbol = get_orderbooks(fut_by_ccy)
+        plot_all_order_books(fut_by_ccy,ob_by_symbol)
+        os.system("rsync -avuzhe ssh %s %s" % (outputdir,config.remotedir+'/'+outputdir))
+    except Exception as e:
+        sendTelegram("ERR:"+str(e))
