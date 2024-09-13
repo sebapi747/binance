@@ -88,10 +88,16 @@ def plot_all_order_books(fut_by_ccy,ob_by_symbol):
     outputdir = "krakenpics/"
     Path(outputdir).mkdir(parents=True, exist_ok=True)
     for ccy in fut_by_ccy.keys():
-        colors = ["blue","orange","green","red"]
+        colors = ["blue","orange","green","red","cyan"]
         obdates = []
+        if len(fut_by_ccy[ccy])>len(colors):
+        	sendTelegram("too many fut:"+str(fut_by_ccy[ccy]))
+        	return
         for i,symbol in enumerate(fut_by_ccy[ccy]):
             obdate,ob = ob_by_symbol[symbol]
+            if len(ob['bids'])==0:
+                print("INFO:skipping "+symbol)
+                continue
             bid,ask = get_bidoffer(ob)
             if symbol[:3]=="PF_":
                 bid0 = bid
