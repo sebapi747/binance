@@ -2,9 +2,11 @@ import requests
 import datetime as dt
 import os
 import pandas as pd
+from lxml import html
 filedir = os.path.dirname(__file__)
 os.chdir("./" if filedir=="" else filedir)
 import config
+headers = {"accept":"*/*"}
 def get_metadata():
     return {'Creator':os.uname()[1] +":"+__file__+":"+str(dt.datetime.utcnow())}
     
@@ -21,6 +23,7 @@ def geturllastmodts(url):
     return ts
 
 def getblogentries():
+    print("INFO: getblogentries")
     url = "https://www.markowitzoptimizer.pro/blog"
     x = requests.get(url, headers=headers)
     if x.status_code!=200:
@@ -61,6 +64,7 @@ def getblogimgts(href):
     return df
 
 def getallarticlepicdates():
+    print("INFO: getallarticlepicdates")
     hrefs = getblogentries()
     dflist = []
     #pnglist = pd.read_csv("pnglist.csv")
@@ -71,6 +75,7 @@ def getallarticlepicdates():
     return df
 
 def checkallpics(days=31):
+    print("INFO: checkallpics")
     pnglist = getallarticlepicdates()
     pnglist.to_csv("pnglist.csv",index=False)
     tscut = dt.datetime.utcnow().timestamp()-3600*24*days
