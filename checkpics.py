@@ -11,7 +11,7 @@ def get_metadata():
     return {'Creator':os.uname()[1] +":"+__file__+":"+str(dt.datetime.utcnow())}
     
 def sendTelegram(text):
-    prefix = os.uname()[1] + __file__ + ":"
+    prefix = os.uname()[1] +":"+ __file__ + ":"
     params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
     resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
     resp.raise_for_status()
@@ -74,6 +74,12 @@ def getallarticlepicdates():
     df = pd.concat(dflist)
     return df
 
+def warnoldpng(oldpng):
+    for i,o in oldpng.iterrows():
+        msg = "WARN: %s from %s last update=%s " % (o['img'], o['href'],str(o['updated']))
+        print(msg)
+        sendTelegram(msg)
+
 def checkallpics(days=31):
     print("INFO: checkallpics")
     pnglist = getallarticlepicdates()
@@ -82,12 +88,12 @@ def checkallpics(days=31):
     pnglist["updated"] = pd.to_datetime([dt.date.fromtimestamp(ts) for ts in pnglist["ts"]])
     oldpng = pnglist.loc[(pnglist["ts"]<tscut) & (pnglist.img.str.contains(".png|.svg"))]
     oldpng.to_csv("pngold.csv",index=False)
-    for i,o in oldpng.iterrows():
-        sendTelegram(str(o))
+    warnoldpng(oldpng)
     
 if __name__ == "__main__":
     try:
-        checkallpics()
+        checkallpics(days=31)
     except Exception as e:
         sendTelegram("ERR:"+str(e))
+    #warnoldpng(oldpng=pd.read_csv("pngold.csv"))
 
