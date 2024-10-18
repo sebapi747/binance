@@ -1,6 +1,6 @@
 import requests
 import datetime as dt
-import os, json
+import os, json, time
 import csv
 import sqlite3
 import config
@@ -42,7 +42,13 @@ def init_sql_schema():
 ''' ---------------------------------------------------------------------------------------------
  Http Request
 '''
-def get_json_via_requests():
+futurecodes = {"mini SP":133,"micro BTC":9024,"BTC":8478,
+    "Corn":300,"Soybean":320,"Chicago Wheat":323,
+    "Crude Oil":425,
+    "AUD FX":37,"GBP FX":42,"Euro FX":58,"Yen FX":69,"MXN FX":75,
+    "Gold":437,"Copper":438,"Silver":458}
+
+def get_json_via_requests(code):
     # https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Raspbian Chromium/78.0.3904.108 Chrome/78.0.3904.108 Safari/537.36",
@@ -50,16 +56,16 @@ def get_json_via_requests():
         "Cache-Control": "max-age=0",
         "Upgrade-Insecure-Requests": "1"
     }
-    url = 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G'
+    url = 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/%d/G' % code
     x = requests.get(url, headers = headers)
     print(x.status_code)
     if x.status_code!=200:
         sendTelegram("error %s %d" % (url,x.status_code))
     return x.json()
     
-def get_json_via_curl():
+def get_json_via_curl(code):
     curlcmd = '''
-    curl 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865' \
+    curl 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/%d/G?quoteCodes=null&_=1621683984865' \
       -H 'authority: www.cmegroup.com' \
       -H 'accept-language: en-US,en;q=0.9' \
       -H 'sec-ch-ua: "Not_A Brand";v="8", "Chromium";v="120"' \
@@ -73,19 +79,26 @@ def get_json_via_curl():
       -H 'sec-fetch-user: ?1' \
       -H 'upgrade-insecure-requests: 1' \
       -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
-      --compressed > cmecurl.json
-    '''
+      --compressed --silent > cmecurl%d.json
+    ''' % (code,code)
     try:
         os.system(curlcmd)
-        with open("cmecurl.json","r") as f:
+        with open("cmecurl%d.json" % code,"r") as f:
             out = json.load(f)
     except Exception as e:
-        sendTelegram("error %s %d" % ('https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865',str(e)))
+        sendTelegram("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
     return out
+
+def fraction8quote(last):
+    lastsplit = last.split("'")
+    if len(lastsplit)==1:
+        return float(lastsplit[0])
+    if float(lastsplit[1])>7:
+        raise Exception("ERR problem with "+last)
+    return float(lastsplit[0])+float(lastsplit[1])/8
     
-def get_fut():
-    ticker = "btc"
-    jsondata = get_json_via_curl()
+def get_fut(code):
+    jsondata = get_json_via_curl(code)
     cols = ['code', 'expirationMonth','last']
     for r in jsondata['quotes']:
         dic = {}
@@ -93,7 +106,7 @@ def get_fut():
             dic[c] = r[c]
         if dic['last'] == '-':
             continue
-        dic['last'] = float(dic['last'])
+        dic['last'] = fraction8quote(dic['last'])
         dic['volume'] = float(r['volume'].replace(',','',-1))
         updated = r['updated']
         updated = updated.replace(" CT<br /> ", " ")
@@ -102,11 +115,13 @@ def get_fut():
         i = dic
         try:
             g.db.execute('insert into cmefut (code, expirationMonth, last, volume, updated, expiry) values (?, ?, ?, ?, ?, ?)', [i['code'], i['expirationMonth'], i['last'], i['volume'], i['updated'], i['expiry'] ])
-        except:
-            print("exception")
-            print(dic)
+        except Exception as e:
+            print("ERR: %s %s" %(str(e),str(dic)))
             pass
     g.db.commit()
 
 #init_sql_schema()
-get_fut()
+for fut,code in futurecodes.items():
+    print(fut,code)
+    get_fut(code)
+    time.sleep(3)
