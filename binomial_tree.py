@@ -17,6 +17,10 @@ def black_scholes_premium(S, K, T, r, sigma):
     put  =  call + K*df-S # use call-put parity for the put
     return call, put, vega
     
+
+# More precise version:
+# b = (np.exp((r+sigma*sigma)*dt)+np.exp(-r*dt))/2
+# up = b + np.sqrt(b*b-1)
 def binomial_tree_pricer(r,q,sigma,T,n,S,payoff,american=True,showArrowDebreu=False):
     if showArrowDebreu and n>6:
         print("WARN: you asked to print all tree state price but n is big, turning off printing")
