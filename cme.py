@@ -77,7 +77,7 @@ def get_json_via_curl():
     '''
     os.system(curlcmd)
     with open("cmecurl.json","r") as f:
-    out = json.load(f)
+        out = json.load(f)
     return out
     
 def get_fut():
