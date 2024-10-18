@@ -44,8 +44,10 @@ def init_sql_schema():
 '''
 futurecodes = {"mini SP":133,"micro BTC":9024,"BTC":8478,
     "Corn":300,"Soybean":320,"Chicago Wheat":323,
-    "Crude Oil":425,
-    "AUD FX":37,"GBP FX":42,"Euro FX":58,"Yen FX":69,"MXN FX":75,
+    "Lean Hog":19,"Live Cattle":22,
+    "5Y T-Note":329,
+    "Crude Oil":425,"Nat Gas":444,
+    "AUD FX":37,"GBP FX":42,"CAD FX":48,"Euro FX":58,"Yen FX":69,"MXN FX":75,
     "Gold":437,"Copper":438,"Silver":458}
 
 def get_json_via_requests(code):
