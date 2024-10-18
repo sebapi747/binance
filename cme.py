@@ -1,6 +1,6 @@
 import requests
 import datetime as dt
-import os
+import os, json
 import csv
 import sqlite3
 import config
@@ -42,9 +42,7 @@ def init_sql_schema():
 ''' ---------------------------------------------------------------------------------------------
  Http Request
 '''
-
-def get_fut():
-    ticker = "btc"
+def get_json_via_requests():
     # https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Raspbian Chromium/78.0.3904.108 Chrome/78.0.3904.108 Safari/537.36",
@@ -57,8 +55,36 @@ def get_fut():
     print(x.status_code)
     if x.status_code!=200:
         sendTelegram("error %s %d" % (url,x.status_code))
+    return x.json()
+    
+def get_json_via_curl():
+    curlcmd = '''
+    curl 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865' \
+      -H 'authority: www.cmegroup.com' \
+      -H 'accept-language: en-US,en;q=0.9' \
+      -H 'sec-ch-ua: "Not_A Brand";v="8", "Chromium";v="120"' \
+      -H 'sec-ch-ua-mobile: ?0' \
+      -H 'sec-ch-ua-platform: "Linux"' \
+      -H 'sec-fetch-dest: document' \
+      -H 'sec-fetch-mode: navigate' \
+      -H 'sec-fetch-site: none' \
+      -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
+      -H 'cache-control: max-age=0' \
+      -H 'sec-fetch-user: ?1' \
+      -H 'upgrade-insecure-requests: 1' \
+      -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
+      --compressed > cmecurl.json
+    '''
+    os.system(curlcmd)
+    with open("cmecurl.json","r") as f:
+    out = json.load(f)
+    return out
+    
+def get_fut():
+    ticker = "btc"
+    jsondata = get_json_via_curl()
     cols = ['code', 'expirationMonth','last']
-    for r in x.json()['quotes']:
+    for r in jsondata['quotes']:
         dic = {}
         for c in cols:
             dic[c] = r[c]
