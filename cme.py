@@ -75,9 +75,12 @@ def get_json_via_curl():
       -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
       --compressed > cmecurl.json
     '''
-    os.system(curlcmd)
-    with open("cmecurl.json","r") as f:
-        out = json.load(f)
+    try:
+        os.system(curlcmd)
+        with open("cmecurl.json","r") as f:
+            out = json.load(f)
+    except Exception as e:
+        sendTelegram("error %s %d" % ('https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865',str(e)))
     return out
     
 def get_fut():
