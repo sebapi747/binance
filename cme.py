@@ -4,7 +4,14 @@ import os, json, time
 import csv
 import sqlite3
 import config
-
+import pytz
+def isCMEClosed():
+    t1 = dt.datetime.now(pytz.timezone("America/Chicago"))
+    dow = t1.weekday()
+    return dow==5 or (dow==4 and t1.hour>17) or (dow==6 and t1.hour<18)
+if isCMEClosed():
+    print("INFO: market closed")
+    exit()
 dirname = config.dirname
 DATABASE= "cme.db"
 
@@ -89,6 +96,7 @@ def get_json_via_curl(code):
             out = json.load(f)
     except Exception as e:
         sendTelegram("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
+        raise Exception("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
     return out
 
 def fraction8quote(last):
@@ -101,6 +109,7 @@ def fraction8quote(last):
     
 def get_fut(code):
     jsondata = get_json_via_curl(code)
+    #jsondata = get_json_via_requests(code)
     cols = ['code', 'expirationMonth','last']
     for r in jsondata['quotes']:
         dic = {}
@@ -124,6 +133,9 @@ def get_fut(code):
 
 #init_sql_schema()
 for fut,code in futurecodes.items():
-    print(fut,code)
-    get_fut(code)
-    time.sleep(3)
+    try:
+        print(fut,code)
+        get_fut(code)
+        time.sleep(3)
+    except Exception as e:
+        print("ERR: %s" % str(e))
