@@ -74,7 +74,7 @@ def get_json_via_requests(code):
     
 def get_json_via_curl(code):
     curlcmd = '''
-    curl 'https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/%d/G?quoteCodes=null&_=1621683984865' \
+    curl 'https://www.cmegroup.com/CmeWS/mvc/quotes/v2/%d?isProtected&_t=1729499259205' \
       -H 'authority: www.cmegroup.com' \
       -H 'accept-language: en-US,en;q=0.9' \
       -H 'sec-ch-ua: "Not_A Brand";v="8", "Chromium";v="120"' \
@@ -99,12 +99,31 @@ def get_json_via_curl(code):
         raise Exception("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
     return out
 
-def fraction8quote(last):
+def fraction32quote(last):
+    quote = last.split("'")
+    if len(quote[1])!=3:
+        raise Exception("ERR: quote format unexpected for 32th %s" % last)
+    thirtysecondth = float(quote[1][:2])
+    if thirtysecondth>=32:
+        raise Exception("ERR: cannot understand 32th fraction quote %s %s %d" % (quote[1],last,thirtysecondth))
+    last = quote[1][2]
+    if last=='+':
+        last = 0.5
+    else:
+        if last<'0' or last>'7':
+            raise Exception("ERR: cannot understand 3rd 32th quote=%s" % last)
+        last = 0.125 * int(last)
+    thirtysecondth += last
+    return float(quote[0])+thirtysecondth/32
+
+def fractionquote(last):
     lastsplit = last.split("'")
     if len(lastsplit)==1:
         return float(lastsplit[0])
+    if len(lastsplit[1])>1:
+        return fraction32quote(last)
     if float(lastsplit[1])>7:
-        raise Exception("ERR problem with "+last)
+        raise Exception("ERR problem reading 8th quote with "+last)
     return float(lastsplit[0])+float(lastsplit[1])/8
     
 def get_fut(code):
@@ -117,12 +136,14 @@ def get_fut(code):
             dic[c] = r[c]
         if dic['last'] == '-':
             continue
-        dic['last'] = fraction8quote(dic['last'])
+        dic['last'] = fractionquote(dic['last'])
         dic['volume'] = float(r['volume'].replace(',','',-1))
         updated = r['updated']
         updated = updated.replace(" CT<br /> ", " ")
-        dic['updated'] = str(dt.datetime.strptime(updated, '%H:%M:%S %d %b %Y'))
-        dic['expiry'] = str((dt.datetime.strptime(r['lastTradeDate']['default24'][0:10],'%m/%d/%Y')))
+        #dic['updated'] = str(dt.datetime.strptime(updated, '%H:%M:%S %d %b %Y'))
+        #dic['expiry'] = str((dt.datetime.strptime(r['lastTradeDate']['default24'][0:10],'%m/%d/%Y')))
+        dic['updated'] = str(dt.datetime.strptime(updated[:19], '%Y-%m-%dT%H:%M:%S'))
+        dic['expiry'] = str((dt.datetime.strptime(r['lastTradeDate'][:19],'%Y-%m-%dT%H:%M:%S')))
         i = dic
         try:
             g.db.execute('insert into cmefut (code, expirationMonth, last, volume, updated, expiry) values (?, ?, ?, ?, ?, ?)', [i['code'], i['expirationMonth'], i['last'], i['volume'], i['updated'], i['expiry'] ])
