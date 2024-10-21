@@ -73,6 +73,7 @@ def get_json_via_requests(code):
     return x.json()
     
 def get_json_via_curl(code):
+    # see https://www.cmegroup.com/markets/products.html#search=Futures&sortDirection=desc&sortField=oi
     curlcmd = '''
     curl 'https://www.cmegroup.com/CmeWS/mvc/quotes/v2/%d?isProtected&_t=1729499259205' \
       -H 'authority: www.cmegroup.com' \
