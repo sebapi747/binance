@@ -5,6 +5,9 @@ import csv
 import sqlite3
 import config
 import pytz
+from pathlib import Path
+filedir = os.path.dirname(__file__)
+os.chdir("./" if filedir=="" else filedir)
 def isCMEClosed():
     t1 = dt.datetime.now(pytz.timezone("America/Chicago"))
     dow = t1.weekday()
@@ -14,6 +17,9 @@ if isCMEClosed():
     exit()
 dirname = config.dirname
 DATABASE= "cme.db"
+
+outputdir = dirname+"cmecsv/"
+Path(outputdir).mkdir(parents=True, exist_ok=True)
 
 def sendTelegram(text):
     prefix = os.uname()[1] + __file__ + ":"
@@ -49,14 +55,39 @@ def init_sql_schema():
 ''' ---------------------------------------------------------------------------------------------
  Http Request
 '''
-futurecodes = {"mini SP":133,"micro BTC":9024,"BTC":8478,
-    "Corn":300,"Soybean":320,"Chicago Wheat":323,
-    "Lean Hog":19,"Live Cattle":22,
-    "2Y T-Note":303,"10Y T-Note":316,"5Y T-Note":329,
-    "Crude Oil":425,"Nat Gas":444,
-    "AUD FX":37,"GBP FX":42,"CAD FX":48,"Euro FX":58,"Yen FX":69,"MXN FX":75,
-    "Gold":437,"Copper":438,"Silver":458}
-
+# import os, csv, json
+# productdic = {}
+# for filename in [f for f in os.listdir() if f[-5:]==".json"]:
+#     with open(filename,"r") as f:
+#         myjson = json.load(f)
+#         idic = myjson["quotes"][0]
+#         productdic[idic["productId"]] = (idic["productCode"],idic["productName"])
+# dic = {}
+# for k in sorted(productdic.keys()):
+#     dic[k] = productdic[k]
+futurecodes = {19: ('HE', 'Lean Hog Futures'),
+    22: ('LE', 'Live Cattle Futures'),
+    37: ('6A', 'Australian Dollar Futures'),
+    42: ('6B', 'British Pound Futures'),
+    48: ('6C', 'Canadian Dollar Futures'),
+    58: ('6E', 'Euro FX Futures'),
+    69: ('6J', 'Japanese Yen Futures'),
+    75: ('6M', 'Mexican Peso Futures'),
+    133: ('ES', 'E-mini S&P 500 Futures'),
+    300: ('ZC', 'Corn Futures'),
+    303: ('ZT', '2-Year T-Note Futures'),
+    316: ('ZN', '10-Year T-Note Futures'),
+    320: ('ZS', 'Soybean Futures'),
+    323: ('ZW', 'Chicago SRW Wheat Futures'),
+    329: ('ZF', '5-Year T-Note Futures'),
+    425: ('CL', 'Crude Oil Futures'),
+    437: ('GC', 'Gold Futures'),
+    438: ('HG', 'Copper Futures'),
+    444: ('NG', 'Henry Hub Natural Gas Futures'),
+    458: ('SI', 'Silver Futures'),
+    8478: ('BTC', 'Bitcoin Futures'),
+    9024: ('MBT', 'Micro Bitcoin Futures')}
+ 
 def get_json_via_requests(code):
     # https://www.cmegroup.com/CmeWS/mvc/Quotes/Future/9024/G?quoteCodes=null&_=1621683984865
     headers = {
@@ -127,7 +158,7 @@ def fractionquote(last):
         raise Exception("ERR problem reading 8th quote with "+last)
     return float(lastsplit[0])+float(lastsplit[1])/8
     
-def get_fut(code):
+def get_fut(code,symbol):
     jsondata = get_json_via_curl(code)
     #jsondata = get_json_via_requests(code)
     cols = ['code', 'expirationMonth','last']
@@ -141,23 +172,33 @@ def get_fut(code):
         dic['volume'] = float(r['volume'].replace(',','',-1))
         updated = r['updated']
         updated = updated.replace(" CT<br /> ", " ")
-        #dic['updated'] = str(dt.datetime.strptime(updated, '%H:%M:%S %d %b %Y'))
-        #dic['expiry'] = str((dt.datetime.strptime(r['lastTradeDate']['default24'][0:10],'%m/%d/%Y')))
         dic['updated'] = str(dt.datetime.strptime(updated[:19], '%Y-%m-%dT%H:%M:%S'))
         dic['expiry'] = str((dt.datetime.strptime(r['lastTradeDate'][:19],'%Y-%m-%dT%H:%M:%S')))
         i = dic
         try:
-            g.db.execute('insert into cmefut (code, expirationMonth, last, volume, updated, expiry) values (?, ?, ?, ?, ?, ?)', [i['code'], i['expirationMonth'], i['last'], i['volume'], i['updated'], i['expiry'] ])
+            # this insertion will throw exception due to unique index if data already there
+            g.db.execute('insert into cmefut (code, expirationMonth, last, volume, updated, expiry) values (?, ?, ?, ?, ?, ?)', 
+                [i['code'], i['expirationMonth'], i['last'], i['volume'], i['updated'], i['expiry']])
+            filename = "%s%s.csv" % (outputdir,symbol)
+            fileexists = os.path.isfile(filename)
+            with open(filename, 'a') as f:
+                w = csv.writer(f)
+                if fileexists == False:
+                    w.writerow(dic.keys())
+                    print("INFO: creating output file %s" % filename)
+                w.writerow(dic.values())
         except Exception as e:
             print("ERR: %s %s" %(str(e),str(dic)))
             pass
     g.db.commit()
 
-#init_sql_schema()
-for fut,code in futurecodes.items():
-    try:
-        print(fut,code)
-        get_fut(code)
-        time.sleep(3)
-    except Exception as e:
-        print("ERR: %s" % str(e))
+if __name__ == "__main__":
+    #init_sql_schema()
+    for code,(symbol,desc) in futurecodes.items():
+        try:
+            print(code,symbol,desc)
+            get_fut(code,symbol)
+            time.sleep(3)
+        except Exception as e:
+            print("ERR: %s" % str(e))
+    
