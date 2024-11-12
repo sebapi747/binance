@@ -12,13 +12,13 @@ def sendTelegram(text):
 
 def checkheartbeat():
     for h in ["gaia","themis","darkstar","hermes"]:
-        os.system("host %s > resolved.%s" % (h,h))
+        os.system("fping %s > resolved.%s" % (h,h))
         with open("resolved.%s" % h,"r") as f:
             line = f.readline()
-            if "address" in line:
+            if "alive" in line:
                 print("INFO:",line)
             else:
                 print("ERR:",line)
-                sendTelegram("%s not foun amongst hosts" % h)
+                sendTelegram("%s not found amongst hosts" % h)
                         
 checkheartbeat()
