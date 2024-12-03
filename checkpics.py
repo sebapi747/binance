@@ -74,11 +74,11 @@ def getallarticlepicdates():
     df = pd.concat(dflist)
     return df
 
-def warnoldpng(oldpng):
+def warnoldpng(oldpng,warnstring):
     for i,o in oldpng.iterrows():
-        msg = "WARN: %s from %s last update=%s " % (o['img'], o['href'],str(o['updated']))
-        print(msg)
-        sendTelegram(msg)
+        msg = "%s: %s from %s last update=%s\n" % (warnstring,o['img'], o['href'],str(o['updated']))
+    print(msg)
+    sendTelegram(msg)
 
 def checkallpics(days=31):
     print("INFO: checkallpics")
@@ -88,7 +88,9 @@ def checkallpics(days=31):
     pnglist["updated"] = pd.to_datetime([dt.date.fromtimestamp(ts) for ts in pnglist["ts"]])
     oldpng = pnglist.loc[(pnglist["ts"]<tscut) & (pnglist.img.str.contains(".png|.svg"))]
     oldpng.to_csv("pngold.csv",index=False)
-    warnoldpng(oldpng)
+    warnoldpng(oldpng,"WARN:")
+    newpng = pnglist.loc[(pnglist["ts"]>=tscut) & (pnglist.img.str.contains(".png|.svg"))]
+    warnoldpng(newpng,"INFO:")
     
 if __name__ == "__main__":
     try:
