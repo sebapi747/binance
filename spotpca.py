@@ -186,4 +186,4 @@ logPrice()
 diff,_, sd = pca_usd()
 pca_btc(diff,sd)
 os.system('rsync -avzhe ssh %s %s' % (outdir, remotedir))
-
+sendTelegram("INFO: [cryptopca](https://www.markowitzoptimizer.pro/blog/36)\n<img src='https://www.markowitzoptimizer.pro/static/pics/deribit/pcaeigenvalue-btc-rt.png'>")
