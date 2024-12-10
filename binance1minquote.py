@@ -83,7 +83,7 @@ def inserttickersymbols(ticker):
     return ticker,nbbefore,nbafter,err
 
 def insertalltickers():
-    tickers = ["BTCUSDT","ETHUSDT","LTCUSDT"]
+    tickers = ["BTCUSDT","ETHUSDT","LTCUSDT","UNIUSDT","TRXUSDT","SOLUSDT","PAXGUSDT","LINKUSDT","AVAXUSDT","DOTUSDT","BNBUSDT","ADAUSDT","DOGEUSDT","XRPUSDT"]
     errors = ""
     out = "\n|ticker|before|after|\n|---|---:|---:|\n"
     for ticker in tickers:
