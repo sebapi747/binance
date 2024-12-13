@@ -120,11 +120,11 @@ def get_json_via_curl(code):
       -H 'sec-fetch-user: ?1' \
       -H 'upgrade-insecure-requests: 1' \
       -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
-      --compressed --silent > cmecurl%d.json
+      --compressed --silent > cmecurl/cmecurl%d.json
     ''' % (code,code)
     try:
         os.system(curlcmd)
-        with open("cmecurl%d.json" % code,"r") as f:
+        with open("cmecurl/cmecurl%d.json" % code,"r") as f:
             out = json.load(f)
     except Exception as e:
         sendTelegram("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
