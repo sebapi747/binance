@@ -127,7 +127,6 @@ def get_json_via_curl(code):
         with open("cmecurl/cmecurl%d.json" % code,"r") as f:
             out = json.load(f)
     except Exception as e:
-        sendTelegram("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
         raise Exception("ERR:cme fut pb for code=%d err=%s" % (code,str(e)))
     return out
 
@@ -194,11 +193,15 @@ def get_fut(code,symbol):
 
 if __name__ == "__main__":
     #init_sql_schema()
+    errmsg  = ""
     for code,(symbol,desc) in futurecodes.items():
         try:
             print(code,symbol,desc)
             get_fut(code,symbol)
             time.sleep(3)
         except Exception as e:
-            print("ERR: %s" % str(e))
+            errmsg += "\nERR: %s" % str(e)
+    print(errmsg)
+    sendTelegram(errmsg)
+
     
