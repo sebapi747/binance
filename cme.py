@@ -201,7 +201,8 @@ if __name__ == "__main__":
             time.sleep(3)
         except Exception as e:
             errmsg += "\nERR: %s" % str(e)
-    print(errmsg)
-    sendTelegram(errmsg)
+    if errmsg!="":
+        print(errmsg)
+        sendTelegram(errmsg)
 
     
