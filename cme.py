@@ -143,7 +143,7 @@ def fraction32quote(last):
     else:
         if last<'0' or last>'7':
             raise Exception("ERR: cannot understand 3rd 32th quote=%s" % last)
-        last = 0.125 * int(last)
+        last = 0.1 * int(last)
     thirtysecondth += last
     return float(quote[0])+thirtysecondth/32
 
