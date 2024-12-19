@@ -90,6 +90,11 @@ def insertalltickers():
         ticker,nbbefore,nbafter,err = inserttickersymbols(ticker)
         out += "|%s|%d|%d|\n" % (ticker,nbbefore,nbafter)
         errors += err
+        if ticker[:3]!="BTC":
+            ticker = ticker.replace("USDT","BTC")
+            ticker,nbbefore,nbafter,err = inserttickersymbols(ticker)
+            out += "|%s|%d|%d|\n" % (ticker,nbbefore,nbafter)
+            errors += err           
     sendTelegram(out+errors)
 
 if __name__ == "__main__":
