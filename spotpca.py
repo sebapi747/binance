@@ -100,8 +100,6 @@ def pca_usd():
 
     plt.bar(np.arange(len(w)),sorted(np.sqrt(w), reverse=True))
     plt.title("PCA Eigenvalue Sqrt Size\n%s" % dfbtc.index[-1][:16])
-    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
-    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.savefig(outdir + "pcaeigenvalue-rt.png")
     plt.close()
     for i in range(1,3):
@@ -153,8 +151,6 @@ def pca_btc(diff,sd):
         sd_btc[c] = np.std(a[c])*np.sqrt(60*24*365)
         
     plt.bar(np.arange(len(w)),sorted(np.sqrt(np.clip(w,0,1e300)), reverse=True))
-    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
-    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title("PCA Eigenvalue Sqrt Size (BTC)\n%s" % diff.index[-1][:16])
     plt.savefig(outdir + "pcaeigenvalue-btc-rt.png")
     plt.close()
