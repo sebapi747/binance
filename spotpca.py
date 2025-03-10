@@ -14,7 +14,7 @@ outdir = dirname + '/pics/'
 
 def sendTelegram(text):
     prefix = os.uname()[1] + __file__ + ":"
-    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
+    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'markdown'}
     resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
     resp.raise_for_status()
     
@@ -48,16 +48,21 @@ def pca_usd():
         print(msg)
         sendTelegram(msg)
         exit()
+    tickerlist = ["BTC"]
     for si in tickers:
         if si=="BTC":
             continue
         si += "USDT"
-        if 1:
-            filename = dirname + "/spot/" + si + ".csv"
-            df = pd.read_csv(filename).tail(roffset)[['dt','price']]
-            df.rename(columns={'price': si}, inplace=True)
-            df   = df.set_index('dt')
-            dfbtc = dfbtc.merge(df, on="dt")
+        filename = dirname + "/spot/" + si + ".csv"
+        df = pd.read_csv(filename).tail(roffset)[['dt','price']]
+        lastprice = df["price"].array[-1]
+        if  np.isnan(lastprice) or lastprice==0:
+            continue
+        tickerlist.append(si[:-4])
+        df.rename(columns={'price': si}, inplace=True)
+        df   = df.set_index('dt')
+        dfbtc = dfbtc.merge(df, on="dt")
+    tickers = tickerlist
     diff = np.log(dfbtc).diff()
     sd = {}
     means = {}
@@ -72,7 +77,7 @@ def pca_usd():
     print("ret usd")
     ret.to_html(outdir + "retspot-usd-rt.html")
 
-    for j in range(14):
+    for j in range(len(tickers)//4):
         print("close log price %d" %j)
         si = "BTCUSDT"
         plt.plot(pd.to_datetime(dfbtc.index).to_numpy(),np.log(dfbtc[si]/dfbtc.iloc[-1][si]), label=si[:-4])
@@ -95,6 +100,8 @@ def pca_usd():
 
     plt.bar(np.arange(len(w)),sorted(np.sqrt(w), reverse=True))
     plt.title("PCA Eigenvalue Sqrt Size\n%s" % dfbtc.index[-1][:16])
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.savefig(outdir + "pcaeigenvalue-rt.png")
     plt.close()
     for i in range(1,3):
@@ -146,14 +153,16 @@ def pca_btc(diff,sd):
         sd_btc[c] = np.std(a[c])*np.sqrt(60*24*365)
         
     plt.bar(np.arange(len(w)),sorted(np.sqrt(np.clip(w,0,1e300)), reverse=True))
+    plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
+    plt.gca().tick_params(axis='x', which='major', labelsize=7)
     plt.title("PCA Eigenvalue Sqrt Size (BTC)\n%s" % diff.index[-1][:16])
     plt.savefig(outdir + "pcaeigenvalue-btc-rt.png")
     plt.close()
     for i in range(1,3):
         plt.bar(np.arange(len(w)), v.T[-i]*np.sqrt(w[-i]), label="pca %d" %(i))
+    plt.title("Correlation PCA on Top Mkt Cap Crypto (BTC)\n%s" % diff.index[-1][:16])
     plt.xticks(np.arange(len(w)),[p[:-4] for p in nonzero], rotation='vertical')
     plt.gca().tick_params(axis='x', which='major', labelsize=7)
-    plt.title("Correlation PCA on Top Mkt Cap Crypto (BTC)\n%s" % diff.index[-1][:16])
     plt.legend()
     plt.savefig(outdir + "pcavector-btc-rt.png")
     plt.close()
