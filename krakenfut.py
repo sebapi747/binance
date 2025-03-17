@@ -1,6 +1,6 @@
 import requests
 import datetime as dt
-import json,os
+import json,os,traceback
 import numpy as np
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -16,8 +16,8 @@ def get_metadata():
     return {'Creator':os.uname()[1] +":"+__file__+":"+str(dt.datetime.utcnow())}
     
 def sendTelegram(text):
-    prefix = os.uname()[1] + __file__ + ":"
-    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'HTML'}
+    prefix = os.uname()[1] + ":"+ __file__ + ":"
+    params = {'chat_id': config.telegramchatid, 'text': prefix+text, 'parse_mode': 'markdown'}
     resp = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(config.telegramtoken), params)
     resp.raise_for_status()
    
@@ -96,7 +96,10 @@ def plot_all_order_books(fut_by_ccy,ob_by_symbol):
         for i,symbol in enumerate(fut_by_ccy[ccy]):
             obdate,ob = ob_by_symbol[symbol]
             if len(ob['bids'])==0:
-                print("INFO:skipping "+symbol)
+                print("INFO:skipping no bid"+symbol)
+                continue
+            if len(ob['asks'])==0:
+                print("INFO:skipping no ask"+symbol)
                 continue
             bid,ask = get_bidoffer(ob)
             if symbol[:3]=="PF_":
@@ -119,11 +122,14 @@ def plot_all_order_books(fut_by_ccy,ob_by_symbol):
         plt.close()
 
 if __name__ == "__main__":
+    linkhtml = " [Kraken Futures](https://www.markowitzoptimizer.pro/blog/69)"
     try:
         symbols = get_fixed_fut_symbols()
         fut_by_ccy = get_fut_by_ccy(symbols)
         ob_by_symbol = get_orderbooks(fut_by_ccy)
         plot_all_order_books(fut_by_ccy,ob_by_symbol)
         os.system("rsync -avuzhe ssh %s %s" % (outputdir,config.remotedir+'/'+outputdir))
+        sendTelegram("updated "+linkhtml)
     except Exception as e:
-        sendTelegram("ERR:"+str(e))
+        msg = "ERR:"+str(e)+traceback.format_exc()+linkhtml
+        sendTelegram(msg)
