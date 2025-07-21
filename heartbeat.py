@@ -11,7 +11,7 @@ def sendTelegram(text):
     resp.raise_for_status()
 
 def checkheartbeat():
-    for h in ["gaia","themis","darkstar","hermes"]:
+    for h in ["gaia","themis","darkstar","hermes","horus"]:
         os.system("fping %s > resolved.%s" % (h,h))
         with open("resolved.%s" % h,"r") as f:
             line = f.readline()
