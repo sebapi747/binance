@@ -79,12 +79,14 @@ call,put,_ = black_scholes_premium(S*np.exp(-q*T), K, T, r, sigma)
 nbs = [1,2,3,4,5,10,50,100,200,500,1000,2000,5000]
 err = {}
 for n in nbs:
-    err[n] = np.log10(np.abs((call-binomial_tree_pricer(r,q,sigma,T,n,S,lambda S: max(S-K,0),american=False))/K))
+    err[n] = np.abs((call-binomial_tree_pricer(r,q,sigma,T,n,S,lambda S: max(S-K,0),american=False))/K)
 n = 300
 plt.plot(err.values(),label="error relative to spot")
-plt.axhline(y=np.log10(call/S),color="red",label="option price")
+plt.axhline(y=call/S,color="red",label="option price")
 plt.xlabel("nb of time steps")
 plt.ylabel("log10 relative error")
+plt.grid(True, axis='y')
+plt.yscale('log')
 ax = plt.gca()
 ax.set(xticks=range(len(nbs)), xticklabels=nbs)
 plt.legend()
