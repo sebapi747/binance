@@ -80,9 +80,12 @@ def tostr(b):
 def plot_order_book(ob,symbol,color,bid,ask):
     factor = (bid+ask)/2 if symbol[:3]=="PF_" else 1
     x = np.transpose(ob['bids'])
-    plt.step(np.log10(x[0]),np.log10(np.cumsum(x[1])*factor),where='post',label="%s %s-%s" % (symbol,tostr(bid),tostr(ask)),color=color)
+    plt.step(x[0],np.cumsum(x[1])*factor,where='post',label="%s %s-%s" % (symbol,tostr(bid),tostr(ask)),color=color)
     x = np.transpose(ob['asks'])
-    plt.step(np.log10(x[0]),np.log10(np.cumsum(x[1])*factor),where='post',color=color)
+    plt.step(x[0],np.cumsum(x[1])*factor,where='post',color=color)
+    plt.grid(True)
+    plt.yscale('log')
+    plt.xscale('log')
     
 def plot_all_order_books(fut_by_ccy,ob_by_symbol):
     outputdir = "krakenpics/"
