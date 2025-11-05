@@ -58,8 +58,8 @@ def check_nexo_price():
         price = float(data['price'])
         
         # Your balances (update these values as needed)
-        USDT_BALANCE = 67309
-        NEXO_BALANCE = 6197
+        USDT_BALANCE = 57351.35
+        NEXO_BALANCE = 5954.78
         
         # Calculate tier and target price
         tier, nexo_ratio, total_value, platinum_breakeven = calculate_nexo_tier(USDT_BALANCE, NEXO_BALANCE, price)
